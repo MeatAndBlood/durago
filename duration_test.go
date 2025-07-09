@@ -84,3 +84,12 @@ func BenchmarkParseDuration(b *testing.B) {
 		ParseDuration(duration)
 	}
 }
+
+func BenchmarkDuration_String(b *testing.B) {
+	duration := "+P99Y11M4W30DT23H59M59S"
+	d, _ := ParseDuration(duration)
+
+	for b.Loop() {
+		_ = d.String()
+	}
+}
