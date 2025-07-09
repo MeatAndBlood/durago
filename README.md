@@ -42,8 +42,3 @@ func main() {
 	fmt.Println(d.GetTimeDuration() == time.Second*12+time.Millisecond*500) // true
 }
 ```
-
-# Future improvements
-- [x] Add conversion from `time.Duration` to `durago.Duration`
-- [x] Add formatting to `ISO-8601 duration`
-- [x] Add marshaller and unmarshaller interface
