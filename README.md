@@ -18,4 +18,29 @@ Similar to sosodev's solution, `2.628e+15` nanoseconds for a month and `3.154e+1
 - [ ] Add marshaller and unmarshaller interface
 
 # Usage
-// TODO
+```golang
+package main
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/MeatAndBlood/durago"
+)
+
+func main() {
+	d, err := durago.ParseDuration("P3Y6M2W4DT12H30M5S")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(d.GetTimeDuration()) // 31104h30m5s
+
+	d, err = durago.ParseDuration("PT12.5S")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(d.GetTimeDuration() == time.Second*12+time.Millisecond*500) // true
+}
+```
