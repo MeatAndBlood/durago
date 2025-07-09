@@ -235,13 +235,50 @@ func (d *Duration) GetTimeDuration() time.Duration {
 
 // FromTimeDuration converts the given time.Duration into durago.Duration.
 func FromTimeDuration(d time.Duration) *Duration {
-	duration := &Duration{
-		d: d,
+	duration := &Duration{}
+
+	if d == 0 {
+		return duration
 	}
 
 	if d < 0 {
 		duration.negative = true
+		d = -d
 	}
+
+	duration.d = d
+
+	for d >= periodYear {
+		duration.years++
+		d -= periodYear
+	}
+
+	for d >= periodMonth {
+		duration.months++
+		d -= periodMonth
+	}
+
+	for d >= periodWeek {
+		duration.weeks++
+		d -= periodWeek
+	}
+
+	for d >= periodDay {
+		duration.days++
+		d -= periodDay
+	}
+
+	for d >= nsPerHour {
+		duration.hours++
+		d -= nsPerHour
+	}
+
+	for d >= nsPerMinute {
+		duration.minutes++
+		d -= nsPerMinute
+	}
+
+	duration.seconds = d.Seconds()
 
 	return duration
 }
