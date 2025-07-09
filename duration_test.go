@@ -56,11 +56,19 @@ func TestParseDuration(t *testing.T) {
 			Duration: "P0Y0M0W00DT00H00M05.5S",
 			Expected: time.Second*5 + time.Millisecond*500,
 		},
+		{
+			Duration:    "P6",
+			ExpectedErr: "invalid format: missing designator",
+		},
+		{
+			Duration:    "P6Y4",
+			ExpectedErr: "invalid format: missing designator",
+		},
 	}
 
 	for _, c := range cases {
 		d, err := ParseDuration(c.Duration)
-		if err != nil {
+		if err != nil || c.ExpectedErr != "" {
 			require.EqualError(t, err, c.ExpectedErr)
 			continue
 		}

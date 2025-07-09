@@ -195,6 +195,10 @@ func ParseDuration(d string) (*Duration, error) {
 		}
 	}
 
+	if len(num) > 0 {
+		return nil, fmt.Errorf("%w: missing designator", ErrInvalidFormat)
+	}
+
 	return duration, nil
 }
 
