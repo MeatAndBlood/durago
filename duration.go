@@ -61,45 +61,35 @@ type Duration struct {
 // ParseDuration attempts to parse the given duration string into a *Duration,
 // if parsing fails an error is returned instead.
 func ParseDuration(d string) (*Duration, error) {
-	state := stateParsePeriod
+	// We track the last parsed element to make sure the designators are in the correct order.
+	var lastParsed int8 = -1
 
+	state := stateParsePeriod
 	duration := &Duration{}
 	num := make([]rune, 0, 4)
-	parsedParts := []bool{
-		false, // sign
-		false, // duration
-		false, // year
-		false, // month
-		false, // week
-		false, // day
-		false, // time
-		false, // hour
-		false, // minute
-		false, // second
-	}
 
 	for _, char := range d {
 		switch char {
 		case positiveSign:
-			if state != stateParsePeriod || parsedParts[0] {
+			if state != stateParsePeriod || lastParsed >= 0 {
 				return nil, fmt.Errorf("%w: unexpected positive sign", ErrInvalidFormat)
 			}
 
-			parsedParts[0] = true
+			lastParsed = 0
 		case negativeSign:
-			if state != stateParsePeriod || parsedParts[0] {
+			if state != stateParsePeriod || lastParsed >= 0 {
 				return nil, fmt.Errorf("%w: unexpected negative sign", ErrInvalidFormat)
 			}
 
-			parsedParts[0] = true
+			lastParsed = 0
 			duration.negative = true
 		case durationDesignator:
-			if state != stateParsePeriod || parsedParts[1] {
+			if state != stateParsePeriod || lastParsed >= 1 {
 				return nil, fmt.Errorf("%w: unexpected duration designator", ErrInvalidFormat)
 			}
-			parsedParts[1] = true
+			lastParsed = 1
 		case yearDesignator:
-			if state != stateParsePeriod || parsedParts[2] {
+			if state != stateParsePeriod || lastParsed >= 2 {
 				return nil, fmt.Errorf("%w: unexpected year designator", ErrInvalidFormat)
 			}
 
@@ -108,13 +98,13 @@ func ParseDuration(d string) (*Duration, error) {
 				return nil, fmt.Errorf("year %w: %s", ErrParse, err.Error())
 			}
 
-			parsedParts[2] = true
+			lastParsed = 2
 			num = num[:0]
 			duration.d += time.Duration(years * periodYear)
 			duration.years = int(years)
 		case minuteMonthDesignator:
 			if state == stateParsePeriod {
-				if parsedParts[3] {
+				if lastParsed >= 3 {
 					return nil, fmt.Errorf("%w: unexpected month designator", ErrInvalidFormat)
 				}
 
@@ -123,14 +113,14 @@ func ParseDuration(d string) (*Duration, error) {
 					return nil, fmt.Errorf("month %w: %s", ErrParse, err.Error())
 				}
 
-				parsedParts[3] = true
+				lastParsed = 3
 				num = num[:0]
 				duration.d += time.Duration(months * periodMonth)
 				duration.months = int(months)
 				continue
 			}
 
-			if parsedParts[8] {
+			if lastParsed >= 8 {
 				return nil, fmt.Errorf("%w: unexpected minute designator", ErrInvalidFormat)
 			}
 
@@ -139,12 +129,12 @@ func ParseDuration(d string) (*Duration, error) {
 				return nil, fmt.Errorf("month %w: %s", ErrParse, err.Error())
 			}
 
-			parsedParts[8] = true
+			lastParsed = 8
 			num = num[:0]
 			duration.d += time.Duration(minutes * nsPerMinute)
 			duration.minutes = int(minutes)
 		case weekDesignator:
-			if state != stateParsePeriod || parsedParts[4] {
+			if state != stateParsePeriod || lastParsed >= 4 {
 				return nil, fmt.Errorf("%w: unexpected week designator", ErrInvalidFormat)
 			}
 
@@ -153,12 +143,12 @@ func ParseDuration(d string) (*Duration, error) {
 				return nil, fmt.Errorf("week %w: %s", ErrParse, err.Error())
 			}
 
-			parsedParts[4] = true
+			lastParsed = 4
 			num = num[:0]
 			duration.d += time.Duration(weeks * periodWeek)
 			duration.weeks = int(weeks)
 		case dayDesignator:
-			if state != stateParsePeriod || parsedParts[5] {
+			if state != stateParsePeriod || lastParsed >= 5 {
 				return nil, fmt.Errorf("%w: unexpected day designator", ErrInvalidFormat)
 			}
 
@@ -167,19 +157,19 @@ func ParseDuration(d string) (*Duration, error) {
 				return nil, fmt.Errorf("day %w: %s", ErrParse, err.Error())
 			}
 
-			parsedParts[5] = true
+			lastParsed = 5
 			num = num[:0]
 			duration.d += time.Duration(days * periodDay)
 			duration.days = int(days)
 		case timeDesignator:
-			if state != stateParsePeriod || parsedParts[6] {
+			if state != stateParsePeriod || lastParsed >= 6 {
 				return nil, fmt.Errorf("%w: unexpected time designator", ErrInvalidFormat)
 			}
 
-			parsedParts[6] = true
+			lastParsed = 6
 			state = stateParseTime
 		case hourDesignator:
-			if state != stateParseTime || parsedParts[7] {
+			if state != stateParseTime || lastParsed >= 7 {
 				return nil, fmt.Errorf("%w: unexpected hour designator", ErrInvalidFormat)
 			}
 
@@ -188,12 +178,12 @@ func ParseDuration(d string) (*Duration, error) {
 				return nil, fmt.Errorf("hour %w: %s", ErrParse, err.Error())
 			}
 
-			parsedParts[7] = true
+			lastParsed = 7
 			num = num[:0]
 			duration.d += time.Duration(hours * nsPerHour)
 			duration.hours = int(hours)
 		case secondDesignator:
-			if state != stateParseTime || parsedParts[9] {
+			if state != stateParseTime || lastParsed == 9 {
 				return nil, fmt.Errorf("%w: unexpected second designator", ErrInvalidFormat)
 			}
 
@@ -202,11 +192,10 @@ func ParseDuration(d string) (*Duration, error) {
 				return nil, fmt.Errorf("second %w: %s", ErrParse, err.Error())
 			}
 
-			parsedParts[9] = true
+			lastParsed = 9
+			num = num[:0]
 			duration.d += time.Duration(seconds * nsPerSecond)
 			duration.seconds = seconds
-
-			return duration, nil
 		default:
 			if unicode.IsNumber(char) || char == floatDesignator {
 				num = append(num, char)
