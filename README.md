@@ -42,3 +42,28 @@ func main() {
 	fmt.Println(d.GetTimeDuration() == time.Second*12+time.Millisecond*500) // true
 }
 ```
+
+# Restrictions
+Anything larger than `P292Y5M2W5DT21H47M16.854775807S` will be converted incorrectly, as an int64 overflow will occur.
+You will still be able to get the correct value from the `String` method, but the value in `GetTimeDuration` will be incorrect.
+
+```golang
+package main
+
+import (
+	"fmt"
+	"math"
+	"time"
+
+	"github.com/MeatAndBlood/durago"
+)
+
+func main() {
+	d := time.Duration(math.MaxInt64)
+	fmt.Println(durago.FromTimeDuration(d).GetTimeDuration() == math.MaxInt64) // true
+
+	dur, _ := durago.ParseDuration("P292Y5M2W5DT21H47M17S")
+	fmt.Println(dur.GetTimeDuration()) // -2562047h47m16.709551616s
+
+}
+```
