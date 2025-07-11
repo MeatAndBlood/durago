@@ -16,68 +16,92 @@ const (
 
 func TestParseDuration(t *testing.T) {
 	cases := []struct {
+		Name        string
 		Duration    string
 		Expected    time.Duration
 		ExpectedErr string
 	}{
 		{
+			Name:     "positive time 1h",
 			Duration: "PT1H",
 			Expected: time.Hour,
 		},
 		{
+			Name:     "negative time 1h",
 			Duration: "-PT1H",
 			Expected: -time.Hour,
 		},
 		{
+			Name:     "positive 1h30m with zeroes",
 			Duration: "+P00DT01H30M00S",
 			Expected: time.Hour + time.Minute*30,
 		},
 		{
-			Duration: "P3Y6M4DT12H30M5S",
-			Expected: timeYear*3 + timeMonth*6 + timeDay*4 + time.Hour*12 + time.Minute*30 + time.Second*5,
+			Name:     "week only",
+			Duration: "P2W",
+			Expected: timeWeek * 2,
 		},
 		{
-			Duration: "P2WT4H",
-			Expected: timeWeek*2 + time.Hour*4,
-		},
-		{
+			Name:     "full",
 			Duration: "P3Y6M2W4DT12H30M5S",
 			Expected: timeYear*3 + timeMonth*6 + timeWeek*2 + timeDay*4 + time.Hour*12 + time.Minute*30 + time.Second*5,
 		},
 		{
-			Duration:    "P3Y6M6M2W4DT12H30M5S",
-			ExpectedErr: "invalid format: unexpected month designator",
-		},
-		{
+			Name:     "5s with zeroes",
 			Duration: "P0Y0M0W00DT00H00M05S",
 			Expected: time.Second * 5,
 		},
 		{
+			Name:     "5.5s with zeroes",
 			Duration: "P0Y0M0W0DT0H00M05.5S",
 			Expected: time.Second*5 + time.Millisecond*500,
 		},
 		{
+			Name:        "missing designator",
 			Duration:    "P6",
 			ExpectedErr: "invalid format: missing designator",
 		},
 		{
+			Name:        "missing designator after valid designator in period",
 			Duration:    "P6Y4",
 			ExpectedErr: "invalid format: missing designator",
+		},
+		{
+			Name:        "missing designator after valid designator in time",
+			Duration:    "PT1S12",
+			ExpectedErr: "invalid format: missing designator",
+		},
+		{
+			Name:        "unexpected hour designator",
+			Duration:    "PT1S12H",
+			ExpectedErr: "invalid format: unexpected hour designator",
+		},
+		{
+			Name:        "unexpected positive sign",
+			Duration:    "P+2Y",
+			ExpectedErr: "invalid format: unexpected positive sign",
+		},
+		{
+			Name:        "duplicate designator",
+			Duration:    "P3Y6M6M2W4DT12H30M5S",
+			ExpectedErr: "invalid format: unexpected month designator",
 		},
 	}
 
 	for _, c := range cases {
-		d, err := ParseDuration(c.Duration)
-		if err != nil || c.ExpectedErr != "" {
-			if err.Error() != c.ExpectedErr {
-				t.Fatalf("expecting error '%s'; got '%s'", c.ExpectedErr, err.Error())
+		t.Run(c.Name, func(t *testing.T) {
+			d, err := ParseDuration(c.Duration)
+			if err != nil || c.ExpectedErr != "" {
+				if err == nil || err.Error() != c.ExpectedErr {
+					t.Fatalf("expecting error '%s'; got '%v'", c.ExpectedErr, err)
+				}
+				return
 			}
-			continue
-		}
 
-		if c.Expected != d.GetTimeDuration() {
-			t.Fatalf("expected duration %d; got %d", c.Expected, d.GetTimeDuration())
-		}
+			if c.Expected != d.GetTimeDuration() {
+				t.Fatalf("expected duration %d; got %d", c.Expected, d.GetTimeDuration())
+			}
+		})
 	}
 }
 
