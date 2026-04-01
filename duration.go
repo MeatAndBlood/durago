@@ -286,54 +286,54 @@ func (d *Duration) String() string {
 	b.Grow(20)
 
 	if d.negative {
-		b.WriteString(string(negativeSign))
+		b.WriteRune(negativeSign)
 	}
 
-	b.WriteString(string(durationDesignator))
+	b.WriteRune(durationDesignator)
 
 	if d.years != 0 {
 		b.WriteString(strconv.Itoa(d.years))
-		b.WriteString(string(yearDesignator))
+		b.WriteRune(yearDesignator)
 	}
 
 	if d.months != 0 {
 		b.WriteString(strconv.Itoa(d.months))
-		b.WriteString(string(minuteMonthDesignator))
+		b.WriteRune(minuteMonthDesignator)
 	}
 
 	if d.weeks != 0 {
 		b.WriteString(strconv.Itoa(d.weeks))
-		b.WriteString(string(weekDesignator))
+		b.WriteRune(weekDesignator)
 	}
 
 	if d.days != 0 {
 		b.WriteString(strconv.Itoa(d.days))
-		b.WriteString(string(dayDesignator))
+		b.WriteRune(dayDesignator)
 	}
 
 	if d.hours != 0 {
-		b.WriteString(string(timeDesignator))
+		b.WriteRune(timeDesignator)
 		b.WriteString(strconv.Itoa(d.hours))
-		b.WriteString(string(hourDesignator))
+		b.WriteRune(hourDesignator)
 		hasTime = true
 	}
 
 	if d.minutes != 0 {
 		if !hasTime {
-			b.WriteString(string(timeDesignator))
+			b.WriteRune(timeDesignator)
 			hasTime = true
 		}
 		b.WriteString(strconv.Itoa(d.minutes))
-		b.WriteString(string(minuteMonthDesignator))
+		b.WriteRune(minuteMonthDesignator)
 	}
 
 	if d.seconds != 0 {
 		if !hasTime {
-			b.WriteString(string(timeDesignator))
+			b.WriteRune(timeDesignator)
 			hasTime = true
 		}
 		b.WriteString(strconv.FormatFloat(d.seconds, 'f', -1, 64))
-		b.WriteString(string(secondDesignator))
+		b.WriteRune(secondDesignator)
 	}
 
 	return b.String()
